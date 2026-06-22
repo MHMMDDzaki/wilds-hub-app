@@ -1,4 +1,4 @@
-@import "../../colors_and_type.css";
+@import "../colors_and_type.css";
 @import "tailwindcss";
 
 /* Map DS tokens → Tailwind utility classes */

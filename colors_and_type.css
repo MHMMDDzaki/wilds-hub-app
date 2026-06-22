@@ -1,0 +1,232 @@
+/* ============================================================
+   WILDS HUB — Design System Foundations
+   colors_and_type.css
+
+   Tactical field-guide / database dashboard for the
+   MHWilds Hub Companion PWA. True dark mode, obsidian-charcoal
+   surfaces, amber + elemental accents, flat 1px-border elevation.
+
+   FONT NOTE:
+     - Montserrat        (UI + body + tables) — SELF-HOSTED from
+                          fonts/ (brand files uploaded by the user)
+     - Oswald            (display / headers / nav / buttons — uppercase)
+                          loaded from Google Fonts CDN
+     - JetBrains Mono    (stats, numerals, slot brackets, codes)
+                          loaded from Google Fonts CDN
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ---------- SELF-HOSTED BRAND FACE: MONTSERRAT ---------- */
+@font-face { font-family:'Montserrat'; font-weight:100; font-style:normal; font-display:swap; src:url('fonts/Montserrat-Thin.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:100; font-style:italic; font-display:swap; src:url('fonts/Montserrat-ThinItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:200; font-style:normal; font-display:swap; src:url('fonts/Montserrat-ExtraLight.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:200; font-style:italic; font-display:swap; src:url('fonts/Montserrat-ExtraLightItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:300; font-style:normal; font-display:swap; src:url('fonts/Montserrat-Light.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:300; font-style:italic; font-display:swap; src:url('fonts/Montserrat-LightItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:400; font-style:normal; font-display:swap; src:url('fonts/Montserrat-Regular.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:400; font-style:italic; font-display:swap; src:url('fonts/Montserrat-Italic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:500; font-style:normal; font-display:swap; src:url('fonts/Montserrat-Medium.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:500; font-style:italic; font-display:swap; src:url('fonts/Montserrat-MediumItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:600; font-style:normal; font-display:swap; src:url('fonts/Montserrat-SemiBold.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:600; font-style:italic; font-display:swap; src:url('fonts/Montserrat-SemiBoldItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:700; font-style:normal; font-display:swap; src:url('fonts/Montserrat-Bold.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:700; font-style:italic; font-display:swap; src:url('fonts/Montserrat-BoldItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:800; font-style:normal; font-display:swap; src:url('fonts/Montserrat-ExtraBold.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:800; font-style:italic; font-display:swap; src:url('fonts/Montserrat-ExtraBoldItalic.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:900; font-style:normal; font-display:swap; src:url('fonts/Montserrat-Black.ttf') format('truetype'); }
+@font-face { font-family:'Montserrat'; font-weight:900; font-style:italic; font-display:swap; src:url('fonts/Montserrat-BlackItalic.ttf') format('truetype'); }
+
+:root {
+  /* ---------- CORE NEUTRAL SURFACES (zinc) ---------- */
+  --bg-root:        #09090b; /* zinc-950 — main viewport backdrop */
+  --bg-surface:     #18181b; /* zinc-900 — cards, panels, sidebar, modals */
+  --bg-surface-2:   #1f1f23; /* slightly raised inset rows / hover fills */
+  --bg-inset:       #101012; /* recessed wells, table stripe */
+  --border:         #27272a; /* zinc-800 — 1px clean container framing */
+  --border-soft:    #27272a99;/* zinc-800/60 — dense grid sub-dividers */
+  --border-strong:  #3f3f46; /* zinc-700 — focused / emphasized edges */
+
+  /* ---------- FOREGROUND / TEXT ---------- */
+  --fg1:  #fafafa; /* zinc-50  — primary text, values */
+  --fg2:  #a1a1aa; /* zinc-400 — secondary text, descriptions */
+  --fg3:  #71717a; /* zinc-500 — muted, captions */
+  --fg4:  #52525b; /* zinc-600 — faint labels, disabled */
+
+  /* ---------- ACCENT & STATUS TOKENS ---------- */
+  --accent:         #f59e0b; /* amber-500  — active nav, buttons, rare stars */
+  --accent-hover:   #fbbf24; /* amber-400  — hover lift */
+  --accent-dim:     #b45309; /* amber-700  — pressed / borders */
+  --success:        #10b981; /* emerald-500 — goal met, complete */
+  --warning:        #ea580c; /* orange-600 — skill overcap, wasted points */
+  --danger:         #ef4444; /* red-500    — wounded pulse, danger zones */
+  --danger-deep:    #450a0a; /* red-950    — wounded scar fill base */
+  --scar-fill:      rgba(69, 10, 10, 0.40);   /* red-950/40 — hitzone scar bg */
+  --zone-fill:      rgba(239, 68, 68, 0.15);  /* vulnerability vector zones */
+
+  /* ---------- ELEMENTAL ACCENTS (data coding) ---------- */
+  --el-fire:    #f97316; /* orange */
+  --el-water:   #38bdf8; /* sky */
+  --el-thunder: #facc15; /* yellow */
+  --el-ice:     #22d3ee; /* cyan */
+  --el-dragon:  #a855f7; /* violet */
+  --el-poison:  #c026d3; /* fuchsia */
+  --el-blast:   #84cc16; /* lime */
+
+  /* ---------- RARITY CODING (badges) ---------- */
+  --rare-low:   #71717a; /* common — zinc */
+  --rare-mid:   #38bdf8; /* uncommon — blue */
+  --rare-high:  #10b981; /* rare — green */
+  --rare-epic:  #f59e0b; /* very rare — amber */
+  --rare-apex:  #ef4444; /* apex — red */
+
+  /* ---------- TYPE FAMILIES ---------- */
+  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+  --font-ui:      'Montserrat', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  /* ---------- SPACING SCALE (dense / tactical) ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* ---------- RADII (mostly sharp / industrial) ---------- */
+  --r-none: 0px;
+  --r-sm:   2px;  /* panels, inputs */
+  --r-md:   4px;  /* badges */
+  --r-pill: 9999px; /* status pills only */
+
+  /* ---------- ELEVATION = BORDERS, NOT SHADOWS ----------
+     The system forbids drop shadows. "Elevation" is expressed
+     purely through 1px borders and surface-color steps.       */
+  --elev-line:   1px solid var(--border);
+  --elev-line-2: 1px solid var(--border-strong);
+  /* The single permitted glow: active/focus accent ring */
+  --ring-accent: 0 0 0 1px var(--accent), 0 0 12px -2px rgba(245,158,11,0.45);
+
+  /* ---------- THEME CALIBRATOR ----------
+     Wrap app content in .calibrated-container and switch the
+     two vars for Standard / Saturated / High-Contrast modes. */
+  --app-contrast:   100%;
+  --app-saturation: 100%;
+}
+
+.calibrated-container {
+  filter: contrast(var(--app-contrast)) saturate(var(--app-saturation));
+  background-color: var(--bg-root);
+}
+.calib-standard      { --app-contrast: 100%; --app-saturation: 100%; }
+.calib-saturated     { --app-contrast: 115%; --app-saturation: 140%; }
+.calib-high-contrast { --app-contrast: 130%; --app-saturation: 100%; }
+
+/* ============================================================
+   SEMANTIC TYPE CLASSES
+   ============================================================ */
+
+body, .ds-body {
+  font-family: var(--font-ui);
+  color: var(--fg1);
+  background: var(--bg-root);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg1);
+}
+.h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg1);
+}
+.h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 1.15;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg1);
+}
+
+/* Overline / section label — the workhorse tactical label */
+.overline {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg3);
+}
+
+.body {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--fg2);
+}
+.body-sm {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--fg2);
+}
+
+/* Dense tabular data cell */
+.data {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--fg1);
+}
+
+/* Monospaced stat / numeral */
+.stat {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg1);
+}
+.stat-lg {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.slot {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: var(--fg2);
+}
+
+/* Button label */
+.btn-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
