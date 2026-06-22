@@ -7,68 +7,57 @@ on:
     branches: [main]
 
 jobs:
-  # ── Lint + Build ────────────────────────────────────────────────────────────
-  ci:
-    name: Lint & Build
+  # ── Build Docker image & push to GHCR ────────────────────────────────────────
+  build:
+    name: Build & Push Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # needed to push to ghcr.io
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build   # includes tsc -b type-check
-        # env vars: public defaults come from .env (committed).
-        # To override for this environment, add secrets in GitHub repo settings
-        # and uncomment + extend the block below:
-        # env:
-        #   VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
-
-      - name: Upload dist
+      - name: Log in to GHCR
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: docker/login-action@v3
         with:
-          name: dist
-          path: dist
-          retention-days: 1
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}   # built-in, no extra secret needed
 
-  # ── Deploy to VPS (main only) ────────────────────────────────────────────────
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/${{ github.repository }}:latest
+          # To override VITE_* at build time, add GitHub Actions secrets and
+          # pass them here as build-args, e.g.:
+          # build-args: |
+          #   VITE_API_BASE=${{ secrets.VITE_API_BASE }}
+
+  # ── Pull & restart container on VPS (main only) ───────────────────────────────
   deploy:
     name: Deploy to VPS
-    needs: ci
+    needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download dist
-        uses: actions/download-artifact@v4
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          name: dist
-          path: dist
-
-      - name: Deploy via rsync
-        env:
-          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            dist/ \
-            "$VPS_USER@$VPS_HOST:$DEPLOY_PATH"
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            IMAGE=ghcr.io/${{ github.repository }}:latest
+            docker pull $IMAGE
+            docker stop wilds-hub 2>/dev/null || true
+            docker rm   wilds-hub 2>/dev/null || true
+            docker run -d \
+              --name wilds-hub \
+              --restart unless-stopped \
+              -p 80:80 \
+              $IMAGE
