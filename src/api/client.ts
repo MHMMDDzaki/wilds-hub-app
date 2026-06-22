@@ -1,8 +1,8 @@
 import type { Monster, Weapon, ArmorPiece, ArmorSet, Charm, Decoration, Skill, Location, Item } from '@/types'
 import { db } from '@/db'
 
-const BASE    = 'https://wilds.mhdb.io/en'
-const VER_URL = 'https://wilds.mhdb.io/version'
+const BASE    = import.meta.env.VITE_API_BASE
+const VER_URL = import.meta.env.VITE_API_VERSION_URL
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)

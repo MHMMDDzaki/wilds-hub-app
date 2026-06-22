@@ -29,9 +29,11 @@ jobs:
 
       - name: Build
         run: npm run build   # includes tsc -b type-check
-        env:
-          # Add VITE_* secrets here so Vite bakes them into the bundle.
-          # Example: VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        # env vars: public defaults come from .env (committed).
+        # To override for this environment, add secrets in GitHub repo settings
+        # and uncomment + extend the block below:
+        # env:
+        #   VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
 
       - name: Upload dist
         if: github.ref == 'refs/heads/main'
