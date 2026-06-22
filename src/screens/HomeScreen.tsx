@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
 import { Overline, Panel, Segmented, Pill, Icon } from '@/components/ui'
-import { REGION_MAPS, REGION_MAP_INDEX, slugify, APEX_NAMES } from '@/data/regionMaps'
+import { REGION_MAPS, REGION_MAP_INDEX, APEX_NAMES } from '@/data/regionMaps'
 import type { Phase, Monster } from '@/types'
 
 const PHASE_TINT: Record<Phase, string> = {

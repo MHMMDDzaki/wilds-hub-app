@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
-import { Overline, Panel, Pill, Button, Icon, RarityBadge } from '@/components/ui'
-import type { Skill, UserTalisman, ActiveSkill } from '@/types'
+import { Overline, Panel, Button, Icon } from '@/components/ui'
+import type { Skill, ActiveSkill } from '@/types'
 
 interface SkillTarget { skillId: number; name: string; targetLevel: number }
 

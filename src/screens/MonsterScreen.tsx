@@ -16,7 +16,7 @@ export function MonsterScreen() {
   const [hitzoneTab,    setHitzoneTab]    = useState<'physical' | 'elemental'>('physical')
 
   const monsters = useLiveQuery(() => db.monsters.toArray(), [])
-  const selected = useLiveQuery(
+  const selected = useLiveQuery<Monster | undefined>(
     () => id ? db.monsters.get(Number(id)) : Promise.resolve(undefined),
     [id]
   )

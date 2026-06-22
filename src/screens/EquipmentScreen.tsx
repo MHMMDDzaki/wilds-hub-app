@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
 import { Overline, Panel, Segmented, StatTile, RarityBadge, Icon, Pill } from '@/components/ui'
-import type { WeaponKind, ArtianAttr, Weapon, ArmorPiece } from '@/types'
+import type { WeaponKind, ArtianAttr, Weapon, ArmorPiece, FavoriteEntry } from '@/types'
 
 const WEAPON_KINDS: WeaponKind[] = [
   'great-sword', 'sword-and-shield', 'dual-blades', 'long-sword',
@@ -119,18 +119,18 @@ export function EquipmentScreen() {
     return flat.filter(n => n.weapon.name.toLowerCase().includes(q))
   }, [flat, weaponSearch])
 
-  const selectedArmor = useLiveQuery(
+  const selectedArmor = useLiveQuery<ArmorPiece | undefined>(
     () => selectedArmorId ? db.armor.get(selectedArmorId) : Promise.resolve(undefined),
     [selectedArmorId]
   )
 
-  const favWeaponEntry = useLiveQuery(
+  const favWeaponEntry = useLiveQuery<FavoriteEntry | undefined>(
     () => selected
       ? db.favorites.where('entityId').equals(selected.id).filter(f => f.kind === 'weapon').first()
       : Promise.resolve(undefined),
     [selected?.id]
   )
-  const favArmorEntry = useLiveQuery(
+  const favArmorEntry = useLiveQuery<FavoriteEntry | undefined>(
     () => selectedArmorId
       ? db.favorites.where('entityId').equals(selectedArmorId).filter(f => f.kind === 'armor').first()
       : Promise.resolve(undefined),

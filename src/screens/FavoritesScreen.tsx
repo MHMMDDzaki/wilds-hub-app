@@ -57,7 +57,7 @@ export function FavoritesScreen() {
     if (favorites !== undefined) rebuildFarmList(favorites)
   }, [favorites])
 
-  const allDone = farmList?.length > 0 && farmList.every(i => i.current >= i.totalNeeded)
+  const allDone = (farmList?.length ?? 0) > 0 && farmList!.every(i => i.current >= i.totalNeeded)
 
   async function increment(item: FarmListItem) {
     if (item.current >= item.totalNeeded || item.id == null) return
