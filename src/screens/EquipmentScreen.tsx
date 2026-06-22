@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
 import { Overline, Panel, Segmented, StatTile, RarityBadge, Icon, Pill } from '@/components/ui'
@@ -84,6 +84,8 @@ export function EquipmentScreen() {
   const [selectedId,      setSelectedId]      = useState<number | null>(null)
   const [artian,          setArtian]          = useState<[ArtianAttr, ArtianAttr, ArtianAttr]>([null, null, null])
   const [expandedRoots,   setExpandedRoots]   = useState<Set<number>>(new Set())
+  const [weaponSearch,    setWeaponSearch]    = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
   // armor
   const [armorKind,       setArmorKind]       = useState<ArmorKindFilter>('all')
   const [armorSearch,     setArmorSearch]     = useState('')
@@ -99,6 +101,23 @@ export function EquipmentScreen() {
   const tree     = useMemo(() => buildTree(weapons ?? []), [weapons])
   const flat     = useMemo(() => flattenTree(tree), [tree])
   const selected = flat.find(n => n.weapon.id === selectedId)?.weapon ?? null
+
+  // Clear search + auto-focus when weapon type changes
+  useEffect(() => {
+    setWeaponSearch('')
+    if (mode === 'weapons') searchRef.current?.focus()
+  }, [weaponType])
+
+  // Auto-focus when switching to weapons mode
+  useEffect(() => {
+    if (mode === 'weapons') searchRef.current?.focus()
+  }, [mode])
+
+  const filteredFlat = useMemo(() => {
+    const q = weaponSearch.trim().toLowerCase()
+    if (!q) return flat
+    return flat.filter(n => n.weapon.name.toLowerCase().includes(q))
+  }, [flat, weaponSearch])
 
   const selectedArmor = useLiveQuery(
     () => selectedArmorId ? db.armor.get(selectedArmorId) : Promise.resolve(undefined),
@@ -343,11 +362,23 @@ export function EquipmentScreen() {
             </select>
           </div>
 
+          <div style={{ position: 'relative', marginBottom: 12 }}>
+            <Icon name="search" size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--fg4)', pointerEvents: 'none' }} />
+            <input
+              ref={searchRef}
+              value={weaponSearch}
+              onChange={e => setWeaponSearch(e.target.value)}
+              placeholder={`Search ${weaponType.replace(/-/g, ' ')}…`}
+              style={{ width: '100%', padding: '7px 10px 7px 30px', background: 'var(--bg-inset)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', color: 'var(--fg1)', fontFamily: 'var(--font-ui)', fontSize: 13, boxSizing: 'border-box' }}
+            />
+          </div>
+
           <Panel title="Upgrade Tree" icon="git-branch">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {flat.map(({ weapon: w, depth, children, rootId }) => {
+              {filteredFlat.map(({ weapon: w, depth, children, rootId }) => {
                 const isRoot = depth === 0
-                if (!isRoot && !expandedRoots.has(rootId)) return null
+                const isSearching = weaponSearch.trim() !== ''
+                if (!isSearching && !isRoot && !expandedRoots.has(rootId)) return null
                 const isExpanded = expandedRoots.has(w.id)
                 return (
                   <div key={w.id} style={{ display: 'flex', alignItems: 'center', marginLeft: depth * 16 }}>
@@ -368,7 +399,7 @@ export function EquipmentScreen() {
                       <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--fg2)', flex: 1 }}>{w.name}</span>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg3)' }}>{w.damage?.raw}</span>
                     </button>
-                    {isRoot && children.length > 0 && (
+                    {isRoot && children.length > 0 && !isSearching && (
                       <button
                         onClick={() => toggleRoot(w.id)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', color: isExpanded ? 'var(--accent)' : 'var(--fg4)', flexShrink: 0 }}
@@ -379,8 +410,10 @@ export function EquipmentScreen() {
                   </div>
                 )
               })}
-              {flat.length === 0 && (
-                <div className="overline" style={{ textAlign: 'center', padding: '16px 0' }}>No weapons found</div>
+              {filteredFlat.length === 0 && (
+                <div className="overline" style={{ textAlign: 'center', padding: '16px 0' }}>
+                  {weaponSearch.trim() ? 'No matches' : 'No weapons found'}
+                </div>
               )}
             </div>
           </Panel>
