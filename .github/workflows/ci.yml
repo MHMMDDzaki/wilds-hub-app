@@ -15,8 +15,15 @@ jobs:
       contents: read
       packages: write   # needed to push to ghcr.io
 
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Lowercase image name
+        id: image
+        run: echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):latest" >> $GITHUB_OUTPUT
 
       - name: Log in to GHCR
         if: github.ref == 'refs/heads/main'
@@ -24,14 +31,14 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}   # built-in, no extra secret needed
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ${{ steps.image.outputs.name }}
           # To override VITE_* at build time, add GitHub Actions secrets and
           # pass them here as build-args, e.g.:
           # build-args: |
@@ -52,7 +59,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            IMAGE=ghcr.io/${{ github.repository }}:latest
+            IMAGE=${{ needs.build.outputs.image }}
             docker pull $IMAGE
             docker stop wilds-hub 2>/dev/null || true
             docker rm   wilds-hub 2>/dev/null || true
