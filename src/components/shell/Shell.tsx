@@ -1,6 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { seedDB } from '@/api/client'
 import { useCalibrator } from '@/hooks/useCalibrator'
 import { Icon } from '@/components/ui'
 
@@ -16,8 +15,6 @@ export function Shell() {
   const location = useLocation()
   const navigate = useNavigate()
   const { contrast, saturation, setPreset } = useCalibrator()
-
-  useEffect(() => { seedDB() }, [])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-contrast',   `${contrast}%`)

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Shell }            from '@/components/shell/Shell'
 import { LandingScreen }   from '@/screens/LandingScreen'
@@ -6,6 +7,8 @@ import { MonsterScreen }   from '@/screens/MonsterScreen'
 import { EquipmentScreen } from '@/screens/EquipmentScreen'
 import { FavoritesScreen } from '@/screens/FavoritesScreen'
 import { SetBuilderScreen }from '@/screens/SetBuilderScreen'
+import { LoadingScreen }   from '@/components/LoadingScreen'
+import { seedDB }          from '@/api/client'
 
 const router = createBrowserRouter([
   { path: '/', element: <LandingScreen /> },
@@ -23,5 +26,17 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  const [seedDone, setSeedDone] = useState(false)
+
+  useEffect(() => {
+    const min = new Promise<void>(r => setTimeout(r, 1600))
+    Promise.all([seedDB(), min]).then(() => setSeedDone(true))
+  }, [])
+
+  return (
+    <>
+      <RouterProvider router={router} />
+      <LoadingScreen seedDone={seedDone} />
+    </>
+  )
 }
