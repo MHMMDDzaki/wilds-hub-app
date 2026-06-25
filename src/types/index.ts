@@ -162,7 +162,7 @@ export interface ActiveSkill {
 }
 
 export type WeaponKind =
-  | 'great-sword' | 'sword-and-shield' | 'dual-blades' | 'long-sword'
+  | 'great-sword' | 'sword-shield' | 'dual-blades' | 'long-sword'
   | 'hammer' | 'hunting-horn' | 'lance' | 'gunlance'
   | 'switch-axe' | 'charge-blade' | 'insect-glaive'
   | 'light-bowgun' | 'heavy-bowgun' | 'bow'

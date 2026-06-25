@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
-import { Overline, Panel, Segmented, StatTile, RarityBadge, Icon, Pill } from '@/components/ui'
+import { Overline, Panel, Segmented, StatTile, EquipIcon, Icon, Pill } from '@/components/ui'
 import type { WeaponKind, ArtianAttr, Weapon, ArmorPiece, FavoriteEntry } from '@/types'
 
 const WEAPON_KINDS: WeaponKind[] = [
-  'great-sword', 'sword-and-shield', 'dual-blades', 'long-sword',
+  'great-sword', 'sword-shield', 'dual-blades', 'long-sword',
   'hammer', 'hunting-horn', 'lance', 'gunlance',
   'switch-axe', 'charge-blade', 'insect-glaive',
   'light-bowgun', 'heavy-bowgun', 'bow',
@@ -195,7 +195,7 @@ export function EquipmentScreen() {
             <Overline>{weaponType.replace(/-/g, ' ')}</Overline>
             <div className="h2" style={{ marginTop: 4 }}>{selected.name}</div>
           </div>
-          <RarityBadge rarity={selected.rarity ?? 1} />
+          <EquipIcon weaponKind={weaponType} rarity={selected.rarity ?? 1} size={36} />
           <button
             onClick={toggleWeaponFav}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: favWeaponEntry ? 'var(--accent)' : 'var(--fg4)' }}
@@ -273,6 +273,7 @@ export function EquipmentScreen() {
             <Overline>Armor · {a.kind}</Overline>
             <div className="h2" style={{ marginTop: 4 }}>{a.name}</div>
           </div>
+          <EquipIcon armorKind={a.kind} rarity={a.rarity} size={36} />
           <button
             onClick={toggleArmorFav}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: favArmorEntry ? 'var(--accent)' : 'var(--fg4)' }}
@@ -395,7 +396,7 @@ export function EquipmentScreen() {
                       }}
                     >
                       {depth > 0 && <span style={{ color: 'var(--border-strong)', fontSize: 10 }}>└</span>}
-                      <RarityBadge rarity={w.rarity ?? 1} />
+                      <EquipIcon weaponKind={weaponType} rarity={w.rarity ?? 1} size={22} />
                       <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--fg2)', flex: 1 }}>{w.name}</span>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg3)' }}>{w.damage?.raw}</span>
                     </button>
@@ -456,7 +457,12 @@ export function EquipmentScreen() {
                     </td></tr>
                   ) : filteredArmor.map(a => (
                     <tr key={a.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedArmorId(a.id)}>
-                      <td style={{ color: 'var(--fg1)', fontFamily: 'var(--font-display)', letterSpacing: '.04em', textTransform: 'uppercase', fontSize: 12 }}>{a.name}</td>
+                      <td style={{ color: 'var(--fg1)', fontFamily: 'var(--font-display)', letterSpacing: '.04em', textTransform: 'uppercase', fontSize: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <EquipIcon armorKind={a.kind} rarity={a.rarity} size={22} />
+                          {a.name}
+                        </div>
+                      </td>
                       <td><Pill kind="neutral">{a.kind}</Pill></td>
                       <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg2)' }}>{a.defense.base}</td>
                       <td style={{ textAlign: 'left', color: 'var(--fg3)', fontSize: 12 }}>
