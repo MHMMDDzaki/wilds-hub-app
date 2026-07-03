@@ -15,7 +15,7 @@ export function LoadingScreen({ seedDone }: { seedDone: boolean }) {
 
   return (
     <div className={`lp-splash${out ? ' lp-splash-out' : ''}`} aria-hidden="true">
-      <img src="/assets/logo.png" alt="" className="lp-splash-crest" />
+      <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="" className="lp-splash-crest" />
       <div className="lp-splash-name">WILDS HUB</div>
       <div className="lp-splash-tagline">Companion Field App</div>
       <div className="lp-splash-bar"><div className="lp-splash-fill" /></div>
