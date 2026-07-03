@@ -4,11 +4,12 @@ import { useCalibrator } from '@/hooks/useCalibrator'
 import { Icon } from '@/components/ui'
 
 const NAV = [
-  { path: '/sandbox',   label: 'Sandbox',  icon: 'map'     },
-  { path: '/monsters',  label: 'Monsters', icon: 'book-open' },
-  { path: '/equipment', label: 'Equipment',icon: 'sword'   },
-  { path: '/favorites', label: 'Favorites',icon: 'star'    },
-  { path: '/builder',   label: 'Builder',  icon: 'layers'  },
+  { path: '/sandbox',   label: 'Sandbox',  icon: 'map'      },
+  { path: '/monsters',  label: 'Monsters', icon: 'book-open'},
+  { path: '/equipment', label: 'Equip',    icon: 'sword'    },
+  { path: '/favorites', label: 'Farm',     icon: 'star'     },
+  { path: '/builder',   label: 'Auto',     icon: 'layers'   },
+  { path: '/my-sets',   label: 'Builder',  icon: 'hammer'   },
 ]
 
 export function Shell() {
