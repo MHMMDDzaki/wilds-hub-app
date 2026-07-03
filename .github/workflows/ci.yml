@@ -65,7 +65,6 @@ jobs:
             # Ensure shared network
             docker network create wilds-hub-net 2>/dev/null || true
 
-            echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull $IMAGE
             docker stop wilds-hub 2>/dev/null || true
             docker rm   wilds-hub 2>/dev/null || true
