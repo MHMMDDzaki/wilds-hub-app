@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import { Button, Icon } from '@/components/ui'
 
 const ROUTE: Record<string, string> = {
@@ -45,9 +46,36 @@ const LP_FEATURES = [
 export function LandingScreen() {
   const navigate = useNavigate()
   const go = (id: string) => navigate(ROUTE[id] ?? '/')
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  // Scroll-triggered reveal
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target) }
+      }),
+      { root, threshold: 0.08, rootMargin: '0px 0px -32px 0px' }
+    )
+    root.querySelectorAll('.lp-feat, .lp-secthead, .lp-band-inner').forEach(el => obs.observe(el))
+    return () => obs.disconnect()
+  }, [])
+
+  // Hero parallax
+  useEffect(() => {
+    const root = rootRef.current
+    const bg   = root?.querySelector<HTMLImageElement>('.lp-hero .lp-bg')
+    if (!root || !bg) return
+    const onScroll = () => {
+      bg.style.transform = `translateY(${root.scrollTop * 0.22}px) scale(1.14)`
+    }
+    root.addEventListener('scroll', onScroll, { passive: true })
+    return () => root.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <div className="lp-root">
+    <div className="lp-root" ref={rootRef}>
       {/* ── Sticky nav ── */}
       <header className="lp-nav">
         <div className="lp-brand" onClick={() => go('sandbox')} title="Enter Hub">

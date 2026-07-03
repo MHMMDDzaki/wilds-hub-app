@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie'
 import type {
   Monster, Weapon, ArmorPiece, ArmorSet, Charm, Decoration, Skill,
   Location, Item, FavoriteEntry, FarmListItem, UserTalisman, UserDecoEntry,
-  CalibratorSettings,
+  CalibratorSettings, SavedSet,
 } from '@/types'
 
 class WildsHubDB extends Dexie {
@@ -21,6 +21,7 @@ class WildsHubDB extends Dexie {
   userTalismans!: Table<UserTalisman,      number>
   userDecos!:     Table<UserDecoEntry,     number>
   calibrator!:    Table<CalibratorSettings, string>
+  savedSets!:     Table<SavedSet,          number>
 
   _meta!: Table<{ key: string; value: string }, string>
 
@@ -49,6 +50,28 @@ class WildsHubDB extends Dexie {
     this.version(2).stores({}).upgrade(tx =>
       tx.table('_meta').where('key').equals('apiVersion').delete()
     )
+
+    // v3: UserTalisman shape changed (added rarity, TalismanSlot[] for slots)
+    this.version(3).stores({}).upgrade(tx =>
+      tx.table('userTalismans').clear()
+    )
+
+    // v5: Custom Set Builder — savedSets table (Spec 07)
+    this.version(5).stores({
+      savedSets: '++id, name, updatedAt',
+    })
+
+    // v4: R8 weapon slot was defaulting to size 0 — fix to size 1 (W1 always present)
+    this.version(4).stores({}).upgrade(async tx => {
+      const talismans = await tx.table('userTalismans').toArray()
+      for (const t of talismans) {
+        if (t.rarity !== 8) continue
+        const fixed = t.slots.map((s: { type: string; size: number }) =>
+          s.type === 'weapon' && s.size === 0 ? { ...s, size: 1 } : s
+        )
+        await tx.table('userTalismans').update(t.id, { slots: fixed })
+      }
+    })
   }
 }
 

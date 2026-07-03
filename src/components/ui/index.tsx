@@ -258,24 +258,60 @@ export function StatTile({ label, value, unit, accent }: StatTileProps) {
   )
 }
 
-// ── Rarity badge ─────────────────────────────────────────────────────────
+// ── Equipment icon (weapon / armor) ──────────────────────────────────────
 
-const RARE_TOKEN = (r: number) =>
-  r <= 3 ? 'var(--rare-low)' :
-  r <= 6 ? 'var(--rare-mid)' :
-  r <= 8 ? 'var(--rare-high)' :
-  r === 9 ? 'var(--rare-epic)' : 'var(--rare-apex)'
+const WEAPON_ICON_MAP: Record<string, string> = {
+  'great-sword':      'Great_Sword',
+  'sword-shield':     'Sword_and_Shield',
+  'dual-blades':      'Dual_Blades',
+  'long-sword':       'Long_Sword',
+  'hammer':           'Hammer',
+  'hunting-horn':     'Hunting_Horn',
+  'lance':            'Lance',
+  'gunlance':         'Gunlance',
+  'switch-axe':       'Switch_Axe',
+  'charge-blade':     'Charge_Blade',
+  'insect-glaive':    'Insect_Glaive',
+  'light-bowgun':     'Light_Bowgun',
+  'heavy-bowgun':     'Heavy_Bowgun',
+  'bow':              'Bow',
+}
 
-export function RarityBadge({ rarity }: { rarity: number }) {
-  const c = RARE_TOKEN(rarity)
+const ARMOR_ICON_MAP: Record<string, string> = {
+  head:  'Helmet',
+  chest: 'Chestplate',
+  arms:  'Armguards',
+  waist: 'Waist',
+  legs:  'Leggings',
+}
+
+const EQUIP_ICON_BASE = '/assets/icons/equipment'
+
+export function EquipIcon({
+  weaponKind,
+  armorKind,
+  rarity = 1,
+  size = 24,
+}: {
+  weaponKind?: string
+  armorKind?: string
+  rarity?: number
+  size?: number
+}) {
+  const prefix = weaponKind ? WEAPON_ICON_MAP[weaponKind] : armorKind ? ARMOR_ICON_MAP[armorKind] : undefined
+  if (!prefix) return null
   return (
-    <span style={{
-      fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: '.08em',
-      padding: '2px 6px', borderRadius: 'var(--r-md)',
-      color: c, border: `1px solid ${c}55`, background: `${c}1a`,
-    }}>
-      R{rarity}
-    </span>
+    <img
+      src={`${EQUIP_ICON_BASE}/${prefix}_${rarity}.png`}
+      alt=""
+      width={size}
+      height={size}
+      style={{ objectFit: 'contain', display: 'block', imageRendering: 'pixelated' }}
+      onError={e => {
+        const img = e.currentTarget
+        if (!img.src.includes('_Base')) img.src = `${EQUIP_ICON_BASE}/${prefix}_Base.webp`
+      }}
+    />
   )
 }
 

@@ -89,9 +89,9 @@ export function MonsterScreen() {
                             <td>{part.name}</td>
                             {hitzoneTab === 'physical' ? (
                               <>
-                                <td>{m ? pct(m.slash)   : '—'}</td>
-                                <td>{m ? pct(m.blunt)   : '—'}</td>
-                                <td>{m ? pct(m.pierce)  : '—'}</td>
+                                <td style={{ color: m && m.slash  >= 0.45 ? 'var(--accent)' : undefined, fontWeight: m && m.slash  >= 0.45 ? 600 : undefined }}>{m ? pct(m.slash)   : '—'}</td>
+                                <td style={{ color: m && m.blunt  >= 0.45 ? 'var(--accent)' : undefined, fontWeight: m && m.blunt  >= 0.45 ? 600 : undefined }}>{m ? pct(m.blunt)   : '—'}</td>
+                                <td style={{ color: m && m.pierce >= 0.45 ? 'var(--accent)' : undefined, fontWeight: m && m.pierce >= 0.45 ? 600 : undefined }}>{m ? pct(m.pierce)  : '—'}</td>
                                 <td>{m ? pct(m.stun)    : '—'}</td>
                               </>
                             ) : (

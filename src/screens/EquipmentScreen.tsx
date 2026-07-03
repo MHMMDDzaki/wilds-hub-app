@@ -1,39 +1,41 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
-import { Overline, Panel, Segmented, StatTile, RarityBadge, Icon, Pill } from '@/components/ui'
+import { Overline, Panel, Segmented, StatTile, EquipIcon, Icon, Pill } from '@/components/ui'
 import type { WeaponKind, ArtianAttr, Weapon, ArmorPiece, FavoriteEntry } from '@/types'
+import { peakSharpness, sharpnessSegments, SHARPNESS_HEX, SHARPNESS_COLOURS } from '@/utils/sharpness'
+import { calcRaw, calcElement, affinityMultiplier } from '@/utils/damage'
+import { effectiveHP } from '@/utils/defense'
 
 const WEAPON_KINDS: WeaponKind[] = [
-  'great-sword', 'sword-and-shield', 'dual-blades', 'long-sword',
+  'great-sword', 'sword-shield', 'dual-blades', 'long-sword',
   'hammer', 'hunting-horn', 'lance', 'gunlance',
   'switch-axe', 'charge-blade', 'insect-glaive',
   'light-bowgun', 'heavy-bowgun', 'bow',
 ]
 
-const ARTIAN_DELTA: Record<NonNullable<ArtianAttr>, { raw?: number; affinity?: number; element?: number; defense?: number }> = {
+// Phase 0.1 — component infusion slots only offer Attack (+5 raw) or Affinity (+5%)
+const ARTIAN_DELTA: Record<NonNullable<ArtianAttr>, { raw?: number; affinity?: number }> = {
   Attack:   { raw: 5 },
   Affinity: { affinity: 5 },
-  Element:  { element: 3 },
-  Defense:  { defense: 10 },
 }
 
 const ARMOR_KINDS = ['head', 'chest', 'arms', 'waist', 'legs'] as const
 type ArmorKindFilter = 'all' | typeof ARMOR_KINDS[number]
 
 type WeaponNode = { weapon: Weapon; depth: number; children: WeaponNode[] }
-type FlatNode = WeaponNode & { rootId: number }
+type FlatNode   = WeaponNode & { rootId: number }
 
 function buildTree(weapons: Weapon[]): WeaponNode[] {
   const roots: WeaponNode[] = []
   const nodes = new Map<number, WeaponNode>()
   for (const w of weapons) nodes.set(w.id, { weapon: w, depth: 0, children: [] })
   for (const w of weapons) {
-    const node = nodes.get(w.id)!
+    const node   = nodes.get(w.id)!
     const prevId = w.crafting?.previous?.id
     if (prevId && nodes.has(prevId)) {
       const parent = nodes.get(prevId)!
-      node.depth = parent.depth + 1
+      node.depth   = parent.depth + 1
       parent.children.push(node)
     } else {
       roots.push(node)
@@ -56,22 +58,21 @@ function isArtian(w: Weapon) {
     (w.series?.name?.toLowerCase().includes('artian') ?? false)
 }
 
-// Approximate sharpness by rarity — API doesn't expose raw sharpness data
-const SHARP_COLORS = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#e2e8f0', '#a855f7']
-function sharpSegs(rarity: number) {
-  if (rarity >= 8) return [10, 10, 15, 20, 25, 25, 15]
-  if (rarity >= 7) return [10, 10, 20, 30, 35, 15,  0]
-  if (rarity >= 5) return [15, 15, 30, 40, 20,  0,  0]
-  return                   [20, 25, 40, 15,  0,  0,  0]
-}
-
 function SharpnessBar({ rarity }: { rarity: number }) {
-  const segs = sharpSegs(rarity)
+  const segs = sharpnessSegments(rarity)
+  const peak = peakSharpness(rarity)
+  const label = peak.charAt(0).toUpperCase() + peak.slice(1)
   return (
     <div>
-      <Overline style={{ marginBottom: 6 }}>Sharpness</Overline>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+        <Overline>Sharpness</Overline>
+        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--fg4)' }}>est. peak: {label}</span>
+      </div>
       <div style={{ display: 'flex', height: 10, gap: 1, borderRadius: 2, overflow: 'hidden' }}>
-        {segs.map((w, i) => w > 0 ? <div key={i} style={{ width: w, background: SHARP_COLORS[i] }} /> : null)}
+        {segs.map((w, i) => w > 0
+          ? <div key={i} style={{ width: w, background: SHARPNESS_HEX[SHARPNESS_COLOURS[i]] }} />
+          : null
+        )}
       </div>
     </div>
   )
@@ -79,36 +80,31 @@ function SharpnessBar({ rarity }: { rarity: number }) {
 
 export function EquipmentScreen() {
   const [mode,            setMode]            = useState<'weapons' | 'armor'>('weapons')
-  // weapons
   const [weaponType,      setWeaponType]      = useState<WeaponKind>('great-sword')
   const [selectedId,      setSelectedId]      = useState<number | null>(null)
   const [artian,          setArtian]          = useState<[ArtianAttr, ArtianAttr, ArtianAttr]>([null, null, null])
   const [expandedRoots,   setExpandedRoots]   = useState<Set<number>>(new Set())
   const [weaponSearch,    setWeaponSearch]    = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
-  // armor
   const [armorKind,       setArmorKind]       = useState<ArmorKindFilter>('all')
   const [armorSearch,     setArmorSearch]     = useState('')
   const [selectedArmorId, setSelectedArmorId] = useState<number | null>(null)
 
-  // ── Queries ─────────────────────────────────────────────────
-  const weapons = useLiveQuery<Weapon[]>(
+  const weapons  = useLiveQuery<Weapon[]>(
     () => db.weapons.where('kind').equals(weaponType).toArray(),
     [weaponType]
   )
   const allArmor = useLiveQuery<ArmorPiece[]>(() => db.armor.toArray(), [])
 
-  const tree     = useMemo(() => buildTree(weapons ?? []), [weapons])
-  const flat     = useMemo(() => flattenTree(tree), [tree])
+  const tree = useMemo(() => buildTree(weapons ?? []), [weapons])
+  const flat = useMemo(() => flattenTree(tree), [tree])
   const selected = flat.find(n => n.weapon.id === selectedId)?.weapon ?? null
 
-  // Clear search + auto-focus when weapon type changes
   useEffect(() => {
     setWeaponSearch('')
     if (mode === 'weapons') searchRef.current?.focus()
   }, [weaponType])
 
-  // Auto-focus when switching to weapons mode
   useEffect(() => {
     if (mode === 'weapons') searchRef.current?.focus()
   }, [mode])
@@ -137,7 +133,6 @@ export function EquipmentScreen() {
     [selectedArmorId]
   )
 
-  // ── Helpers ─────────────────────────────────────────────────
   function toggleRoot(id: number) {
     setExpandedRoots(prev => {
       const s = new Set(prev)
@@ -146,17 +141,26 @@ export function EquipmentScreen() {
     })
   }
 
+  // Phase 0.2 — elementDisplay = API value (shown in UI); elementTrue = display/10 (for damage math)
   function calcStats(w: Weapon) {
+    const elementDisplay = w.specials?.[0]?.damage?.display ?? 0
     return artian.reduce((acc, a) => {
       if (!a) return acc
       const d = ARTIAN_DELTA[a]
       return {
-        raw:      acc.raw      + (d.raw      ?? 0),
-        affinity: acc.affinity + (d.affinity ?? 0),
-        element:  acc.element  + (d.element  ?? 0),
-        defense:  acc.defense  + (d.defense  ?? 0),
+        raw:            acc.raw      + (d.raw      ?? 0),
+        affinity:       acc.affinity + (d.affinity ?? 0),
+        elementDisplay: acc.elementDisplay,
+        elementTrue:    acc.elementTrue,
+        defenseBonus:   acc.defenseBonus,
       }
-    }, { raw: w.damage?.raw ?? 0, affinity: w.affinity ?? 0, element: w.specials?.[0]?.damage?.display ?? 0, defense: w.defenseBonus ?? 0 })
+    }, {
+      raw:            w.damage?.raw  ?? 0,
+      affinity:       w.affinity     ?? 0,
+      elementDisplay,
+      elementTrue:    elementDisplay / 10,
+      defenseBonus:   w.defenseBonus ?? 0,
+    })
   }
 
   async function toggleWeaponFav() {
@@ -182,6 +186,14 @@ export function EquipmentScreen() {
 
   // ── Weapon detail ────────────────────────────────────────────
   if (mode === 'weapons' && selected && stats) {
+    const peak    = peakSharpness(selected.rarity ?? 1)
+    const peakLbl = peak.charAt(0).toUpperCase() + peak.slice(1)
+    const rawHit  = calcRaw(stats.raw, peak)
+    const elemHit = stats.elementDisplay > 0 ? calcElement(stats.elementDisplay, peak) : 0
+    const effRaw  = stats.affinity !== 0
+      ? Math.round(stats.raw * affinityMultiplier(stats.affinity))
+      : null
+
     return (
       <div className="page">
         <div className="screen-head">
@@ -195,11 +207,10 @@ export function EquipmentScreen() {
             <Overline>{weaponType.replace(/-/g, ' ')}</Overline>
             <div className="h2" style={{ marginTop: 4 }}>{selected.name}</div>
           </div>
-          <RarityBadge rarity={selected.rarity ?? 1} />
+          <EquipIcon weaponKind={weaponType} rarity={selected.rarity ?? 1} size={36} />
           <button
             onClick={toggleWeaponFav}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: favWeaponEntry ? 'var(--accent)' : 'var(--fg4)' }}
-            title={favWeaponEntry ? 'Remove' : 'Star'}
           >
             <Icon name="star" size={14} />
           </button>
@@ -208,10 +219,10 @@ export function EquipmentScreen() {
         <div style={{ display: 'grid', gap: 12 }}>
           <Panel title="Base Statistics" icon="activity">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <StatTile label="Raw Damage" value={stats.raw} accent />
-              <StatTile label="Affinity"   value={`${stats.affinity}%`} />
-              {stats.element > 0 && <StatTile label={selected.specials?.[0]?.element ?? 'Element'} value={stats.element} />}
-              {stats.defense  > 0 && <StatTile label="Defense Bonus" value={stats.defense} />}
+              <StatTile label="Raw Damage"    value={stats.raw}            accent />
+              <StatTile label="Affinity"      value={`${stats.affinity}%`} />
+              {stats.elementDisplay > 0 && <StatTile label={selected.specials?.[0]?.element ?? 'Element'} value={stats.elementDisplay} />}
+              {stats.defenseBonus   > 0 && <StatTile label="Defense Bonus" value={stats.defenseBonus} />}
             </div>
             {selected.slots && selected.slots.filter(s => s > 0).length > 0 && (
               <div style={{ marginBottom: 16 }}>
@@ -224,9 +235,32 @@ export function EquipmentScreen() {
             <SharpnessBar rarity={selected.rarity ?? 1} />
           </Panel>
 
+          {/* Phase 2.1 — Damage preview using verified formulas */}
+          <Panel title="Damage Preview" icon="zap">
+            <div style={{ marginBottom: 10, fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--fg4)' }}>
+              Est. peak sharpness: <span style={{ color: SHARPNESS_HEX[peak] }}>{peakLbl}</span>
+              {' · '}MV 100 · HZ 100 (neutral assumptions)
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <StatTile label="Raw Hit" value={rawHit} accent />
+              {elemHit > 0 && (
+                <StatTile label={`${selected.specials?.[0]?.element ?? 'Elem'} Hit`} value={elemHit} />
+              )}
+              {effRaw !== null && (
+                <StatTile
+                  label={`Eff. Raw (${stats.affinity > 0 ? '+' : ''}${stats.affinity}% aff)`}
+                  value={Math.round(effRaw)}
+                />
+              )}
+              {elemHit > 0 && (
+                <StatTile label="Total Hit" value={rawHit + elemHit} accent />
+              )}
+            </div>
+          </Panel>
+
           {isArtian(selected) && (
             <Panel title="Artian Reinforcement" icon="flask-conical">
-              <Overline style={{ marginBottom: 10 }}>Reinforcement Slots</Overline>
+              <Overline style={{ marginBottom: 10 }}>Component Infusion Slots</Overline>
               <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                 {([0, 1, 2] as const).map(i => (
                   <select
@@ -241,14 +275,25 @@ export function EquipmentScreen() {
                     <option value="">— None —</option>
                     <option>Attack</option>
                     <option>Affinity</option>
-                    <option>Element</option>
-                    <option>Defense</option>
                   </select>
                 ))}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <StatTile label="Final Raw" value={stats.raw}            accent />
                 <StatTile label="Final Aff" value={`${stats.affinity}%`} />
+              </div>
+            </Panel>
+          )}
+
+          {selected.skills && selected.skills.length > 0 && (
+            <Panel title="Innate Skills" icon="sparkles">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {selected.skills.map((sl, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--fg2)', flex: 1 }}>{sl.skill.name}</span>
+                    <Pill kind="neutral">Lv {sl.level}</Pill>
+                  </div>
+                ))}
               </div>
             </Panel>
           )}
@@ -259,7 +304,8 @@ export function EquipmentScreen() {
 
   // ── Armor detail ─────────────────────────────────────────────
   if (mode === 'armor' && selectedArmorId && selectedArmor) {
-    const a = selectedArmor
+    const a   = selectedArmor
+    const ehp = effectiveHP(a.defense.max)
     return (
       <div className="page">
         <div className="screen-head">
@@ -273,20 +319,22 @@ export function EquipmentScreen() {
             <Overline>Armor · {a.kind}</Overline>
             <div className="h2" style={{ marginTop: 4 }}>{a.name}</div>
           </div>
+          <EquipIcon armorKind={a.kind} rarity={a.rarity} size={36} />
           <button
             onClick={toggleArmorFav}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: favArmorEntry ? 'var(--accent)' : 'var(--fg4)' }}
-            title={favArmorEntry ? 'Remove from favorites' : 'Add to favorites'}
           >
             <Icon name="star" size={14} />
           </button>
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
+          {/* Phase 2.2 — Effective HP + resistance % */}
           <Panel title="Defense & Resistance" icon="shield">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
               <StatTile label="Base Def" value={a.defense.base} />
               <StatTile label="Max Def"  value={a.defense.max}  accent />
+              <StatTile label="Eff. HP"  value={ehp} />
             </div>
             <Overline style={{ marginBottom: 8 }}>Elemental Resistance</Overline>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -296,6 +344,11 @@ export function EquipmentScreen() {
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: v > 0 ? 'var(--success)' : v < 0 ? '#fca5a5' : 'var(--fg4)' }}>
                     {v > 0 ? `+${v}` : v}
                   </span>
+                  {v !== 0 && (
+                    <span style={{ fontFamily: 'var(--font-ui)', fontSize: 10, color: 'var(--fg4)', width: 60 }}>
+                      {Math.abs(v)}% {v > 0 ? 'less' : 'more'}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -376,26 +429,18 @@ export function EquipmentScreen() {
           <Panel title="Upgrade Tree" icon="git-branch">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {filteredFlat.map(({ weapon: w, depth, children, rootId }) => {
-                const isRoot = depth === 0
+                const isRoot      = depth === 0
                 const isSearching = weaponSearch.trim() !== ''
                 if (!isSearching && !isRoot && !expandedRoots.has(rootId)) return null
-                const isExpanded = expandedRoots.has(w.id)
+                const isExpanded  = expandedRoots.has(w.id)
                 return (
                   <div key={w.id} style={{ display: 'flex', alignItems: 'center', marginLeft: depth * 16 }}>
                     <button
                       onClick={() => setSelectedId(w.id)}
-                      style={{
-                        flex: 1, display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 8px',
-                        background: 'transparent',
-                        borderTop: 'none', borderRight: 'none', borderBottom: 'none',
-                        borderLeft: '2px solid transparent',
-                        borderRadius: 'var(--r-sm)',
-                        cursor: 'pointer', textAlign: 'left',
-                      }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', background: 'transparent', borderTop: 'none', borderRight: 'none', borderBottom: 'none', borderLeft: '2px solid transparent', borderRadius: 'var(--r-sm)', cursor: 'pointer', textAlign: 'left' }}
                     >
                       {depth > 0 && <span style={{ color: 'var(--border-strong)', fontSize: 10 }}>└</span>}
-                      <RarityBadge rarity={w.rarity ?? 1} />
+                      <EquipIcon weaponKind={weaponType} rarity={w.rarity ?? 1} size={22} />
                       <span style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--fg2)', flex: 1 }}>{w.name}</span>
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg3)' }}>{w.damage?.raw}</span>
                     </button>
@@ -456,7 +501,12 @@ export function EquipmentScreen() {
                     </td></tr>
                   ) : filteredArmor.map(a => (
                     <tr key={a.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedArmorId(a.id)}>
-                      <td style={{ color: 'var(--fg1)', fontFamily: 'var(--font-display)', letterSpacing: '.04em', textTransform: 'uppercase', fontSize: 12 }}>{a.name}</td>
+                      <td style={{ color: 'var(--fg1)', fontFamily: 'var(--font-display)', letterSpacing: '.04em', textTransform: 'uppercase', fontSize: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <EquipIcon armorKind={a.kind} rarity={a.rarity} size={22} />
+                          {a.name}
+                        </div>
+                      </td>
                       <td><Pill kind="neutral">{a.kind}</Pill></td>
                       <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg2)' }}>{a.defense.base}</td>
                       <td style={{ textAlign: 'left', color: 'var(--fg3)', fontSize: 12 }}>
