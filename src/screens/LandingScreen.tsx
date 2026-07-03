@@ -15,31 +15,31 @@ const LP_FEATURES = [
     id: 'sandbox', no: '01', icon: 'map', accent: '#f59e0b', short: 'Sandbox',
     over: 'Environmental Sandbox', name: 'Plan the Hunt Before It Begins',
     body: 'Plot pop-up camps across five living regions and watch the ecosystem answer back. Read each seasonal phase, trace the roaming danger zones, and pin your camp clear of apex predators — so you arrive sharpened, supplied, and one step ahead of the wilds.',
-    img: '/assets/feature_1.jpg',
+    img: `${import.meta.env.BASE_URL}assets/feature_1.jpg`,
   },
   {
     id: 'monster', no: '02', icon: 'crosshair', accent: '#ef4444', short: 'Monster',
     over: 'Monster Field Data', name: 'Know Exactly Where to Strike',
     body: 'Every hitzone, weakness, and break threshold laid out in one tactical field guide. Filter the roster, drill into elemental vulnerabilities, and commit the soft spots to memory — turn a desperate brawl into a clean, deliberate takedown.',
-    img: '/assets/feature_2.jpg',
+    img: `${import.meta.env.BASE_URL}assets/feature_2.jpg`,
   },
   {
     id: 'equip', no: '03', icon: 'hammer', accent: '#22d3ee', short: 'Equipment',
     over: 'Reinforcement Simulator', name: 'Forge a Weapon That Hits Harder',
     body: 'Reinforce Artian weapons with live EX-smelting math, or socket decoration jewels into any blade and armor piece. Attack, affinity, and element recalculate the instant you change a slot — so you build with certainty, not guesswork.',
-    img: '/assets/feature_3.jpg',
+    img: `${import.meta.env.BASE_URL}assets/feature_3.jpg`,
   },
   {
     id: 'farming', no: '04', icon: 'package', accent: '#10b981', short: 'Farming',
     over: 'Farming Tracker', name: 'Never Grind the Same Part Twice',
     body: 'Build a material checklist that follows your loadout goals. Add anything from the catalog, set the exact quantities you need, and tick off drops as you carve — every grind has a finish line, and you can see it.',
-    img: '/assets/feature_4.jpg',
+    img: `${import.meta.env.BASE_URL}assets/feature_4.jpg`,
   },
   {
     id: 'sets', no: '05', icon: 'gem', accent: '#a855f7', short: 'Set Builder',
     over: 'Mixed Set Searcher', name: 'Lock In the Perfect Build',
     body: 'Mix armor across every slot and let the searcher surface the skill spread you are chasing. Weigh defense, resistances, and active skills side by side, then commit to a set that plays exactly the way you want to hunt.',
-    img: '/assets/feature_5.jpg',
+    img: `${import.meta.env.BASE_URL}assets/feature_5.jpg`,
   },
 ]
 
@@ -79,7 +79,7 @@ export function LandingScreen() {
       {/* ── Sticky nav ── */}
       <header className="lp-nav">
         <div className="lp-brand" onClick={() => go('sandbox')} title="Enter Hub">
-          <img src="/assets/logo.png" alt="Wilds Hub" className="lp-crest-sm" />
+          <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="Wilds Hub" className="lp-crest-sm" />
         </div>
         <nav className="lp-navlinks">
           {LP_FEATURES.map(f => (
@@ -97,10 +97,10 @@ export function LandingScreen() {
 
       {/* ── Hero ── */}
       <section className="lp-hero">
-        <img className="lp-bg" src="/assets/art_1.jpg" alt="" aria-hidden />
+        <img className="lp-bg" src={`${import.meta.env.BASE_URL}assets/art_1.jpg`} alt="" aria-hidden />
         <div className="lp-scrim lp-scrim-hero" />
         <div className="lp-hero-inner">
-          <img src="/assets/logo.png" alt="" className="lp-crest-lg" />
+          <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="" className="lp-crest-lg" />
           <div className="lp-eyebrow">Companion Field App</div>
           <h1 className="lp-title">WILDS HUB</h1>
           <div className="lp-sub">Master the Hunt</div>
@@ -123,7 +123,7 @@ export function LandingScreen() {
 
       {/* ── Cinematic band ── */}
       <section className="lp-band lp-band-hunt">
-        <img className="lp-bg" src="/assets/art_3.jpg" alt="" aria-hidden />
+        <img className="lp-bg" src={`${import.meta.env.BASE_URL}assets/art_3.jpg`} alt="" aria-hidden />
         <div className="lp-scrim lp-scrim-hunt" />
         <div className="lp-band-inner">
           <div className="lp-band-eyebrow">From plains to everfrost</div>
@@ -167,11 +167,11 @@ export function LandingScreen() {
 
       {/* ── Closing CTA band ── */}
       <section className="lp-band lp-band-close">
-        <img className="lp-bg" src="/assets/art_2.jpg" alt="" aria-hidden />
+        <img className="lp-bg" src={`${import.meta.env.BASE_URL}assets/art_2.jpg`} alt="" aria-hidden />
         <div className="lp-scrim lp-scrim-close" />
-        <img className="lp-sigil" src="/assets/wallpaper_landscape.png" alt="" aria-hidden />
+        <img className="lp-sigil" src={`${import.meta.env.BASE_URL}assets/wallpaper_landscape.png`} alt="" aria-hidden />
         <div className="lp-band-inner">
-          <img src="/assets/logo.png" alt="" className="lp-crest-close" />
+          <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="" className="lp-crest-close" />
           <div className="lp-close-h">Ready for the Hunt?</div>
           <p className="lp-close-sub">Every tool, one tap away. Pick where you want to begin.</p>
           <div className="lp-cta">

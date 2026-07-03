@@ -285,7 +285,7 @@ const ARMOR_ICON_MAP: Record<string, string> = {
   legs:  'Leggings',
 }
 
-const EQUIP_ICON_BASE = '/assets/icons/equipment'
+const EQUIP_ICON_BASE = `${import.meta.env.BASE_URL}assets/icons/equipment`
 
 export function EquipIcon({
   weaponKind,

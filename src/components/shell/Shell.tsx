@@ -40,7 +40,7 @@ export function Shell() {
       }} className="sidebar-desktop">
         {/* Wordmark */}
         <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border)' }}>
-          <img src="/assets/wordmark.svg" alt="WILDS HUB" style={{ height: 28 }} />
+          <img src={`${import.meta.env.BASE_URL}assets/wordmark.svg`} alt="WILDS HUB" style={{ height: 28 }} />
         </div>
 
         {/* Nav items */}
