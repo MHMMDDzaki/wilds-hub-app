@@ -238,8 +238,6 @@ export function CustomSetBuilderScreen() {
   const [expandedPanel, setExpanded]     = useState<string | null>('weapon')
   const [armorFilters,  setArmorFilters] = useState<Partial<Record<ArmorSlotKey, string>>>({})
   const [gogmaQueries,  setGogmaQueries] = useState<[string, string]>(['', ''])
-  const [skillQuery,    setSkillQuery]   = useState('')
-
   // Community state
   const [communityBuilds,  setCommunityBuilds]  = useState<CommunityBuild[]>([])
   const [communityLoading, setCommunityLoading] = useState(false)
@@ -255,7 +253,7 @@ export function CustomSetBuilderScreen() {
   // ── Dexie live queries ──────────────────────────────────────────────────────
 
   const savedSets    = useLiveQuery(() => db.savedSets.orderBy('updatedAt').reverse().toArray(), [])
-  const activeSet    = useLiveQuery(() => activeSetId ? db.savedSets.get(activeSetId) : Promise.resolve(undefined), [activeSetId])
+  const activeSet    = useLiveQuery<SavedSet | undefined>(() => activeSetId != null ? db.savedSets.get(activeSetId) : undefined, [activeSetId])
   const allWeapons   = useLiveQuery(() => db.weapons.toArray(), [])
   const allArmor     = useLiveQuery(() => db.armor.toArray(), [])
   const allSkills    = useLiveQuery(() => db.skills.toArray(), [])

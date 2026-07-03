@@ -872,7 +872,7 @@ export function SetBuilderScreen() {
 
           {selectedWeapon && (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', background: 'var(--bg-inset)', borderRadius: 'var(--r-sm)', border: '1px solid var(--accent)', marginBottom: 10 }}>
-              <EquipIcon weaponKind={weaponKind} rarity={selectedWeapon.rarity} size={22} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span style={{ flexShrink: 0, marginTop: 1, display: 'flex' }}><EquipIcon weaponKind={weaponKind} rarity={selectedWeapon.rarity} size={22} /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--fg1)', marginBottom: 2 }}>{selectedWeapon.name}</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg3)' }}>
